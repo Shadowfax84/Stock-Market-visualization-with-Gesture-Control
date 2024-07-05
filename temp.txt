@@ -1,0 +1,25 @@
+Project Setup 
+final_proj/
+    manage.py
+    django_debug.log
+    final_proj/
+        __init__.py
+        asgi.py
+        settings.py
+        urls.py
+        wsgi.py
+    ui/
+        __init__.py
+        admin.py
+        apps.py
+        models.py
+        tests.py
+        views.py
+        static/
+            styles.css
+        templates/
+            landing_page.html
+        migrations/
+        management/
+            commands/
+                fetch_nifty_data.py 

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NIFTY 50 Analysis</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Welcome to NIFTY 50 Analysis</h1>
+    </header>
+    <main>
+        <section id="about">
+            <h2>About NIFTY 50</h2>
+            <p>NIFTY 50 is the benchmark stock market index of the National Stock Exchange of India (NSE).</p>
+        </section>
+        <section id="graphs">
+            <h2>Market Analysis</h2>
+            <div id="chart_div"></div>
+            <script>
+                $(document).ready(function(){
+                    var trace1 = {
+                        x: [/* X-axis data */],
+                        y: [/* Y-axis data */],
+                        mode: 'lines+markers',
+                        type: 'scatter'
+                    };
+
+                    var data = [trace1];
+
+                    var layout = {
+                        title: 'NIFTY 50 Index Performance',
+                        xaxis: {
+                            title: 'Date'
+                        },
+                        yaxis: {
+                            title: 'Index Value'
+                        }
+                    };
+
+                    Plotly.newPlot('chart_div', data, layout);
+                });
+            </script>
+        </section>
+    </main>
+</body>
+</html>
