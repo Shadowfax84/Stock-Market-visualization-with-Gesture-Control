@@ -15,7 +15,7 @@ class Command(BaseCommand):
             logger.info('Fetching NIFTY 50 Index data...')
             ticker = "^NSEI"
             start_date = "2018-01-01"
-            end_date = "2024-06-14"
+            end_date = "2024-07-09"
             data = yf.download(ticker, start=start_date, end=end_date)
 
             logger.info('Calculating financial metrics...')
@@ -120,6 +120,8 @@ class Command(BaseCommand):
                 stock_data.save()
 
             logger.info('Successfully fetched and saved NIFTY 50 data.')
+            print('NIFTY 50 data fetched and saved successfully.')
 
         except Exception as e:
             logger.error(f'Error fetching NIFTY 50 data: {e}')
+            print(f'Error fetching NIFTY 50 data: {e}')

@@ -4,47 +4,238 @@
     <meta charset="UTF-8">
     <title>NIFTY 50 Analysis</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <link rel="stylesheet" href="{% static 'landing.css' %}">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </head>
 <body>
     <header>
-        <h1>Welcome to NIFTY 50 Analysis</h1>
+        <div class="header-content">
+            <img src="{% static 'NSE_logo.png' %}" alt="NSE Logo" class="logo">
+            <h1>Welcome to NIFTY 50 Analysis</h1>
+            <img src="{% static 'nifty50_logo.svg' %}" alt="NIFTY 50 Logo" class="logo">
+        </div>
     </header>
     <main>
-        <section id="about">
-            <h2>About NIFTY 50</h2>
-            <p>NIFTY 50 is the benchmark stock market index of the National Stock Exchange of India (NSE).</p>
+        <section id="about-nse">
+            <h2>About NSE</h2>
+            <p>The National Stock Exchange of India (NSE) is the leading stock exchange in India, located in Mumbai. NSE was established in 1992 as the first dematerialized electronic exchange in the country.</p>
         </section>
-        <section id="graphs">
+        <section id="about-nifty50">
+            <h2>About NIFTY 50</h2>
+            <p>NIFTY 50 is the benchmark stock market index of the National Stock Exchange of India (NSE). It represents the weighted average of 50 of the largest Indian companies listed on the NSE.</p>
+        </section>
+        <section id="market-analysis">
             <h2>Market Analysis</h2>
-            <div id="chart_div"></div>
-            <script>
-                $(document).ready(function(){
-                    var trace1 = {
-                        x: [/* X-axis data */],
-                        y: [/* Y-axis data */],
-                        mode: 'lines+markers',
-                        type: 'scatter'
-                    };
-
-                    var data = [trace1];
-
-                    var layout = {
-                        title: 'NIFTY 50 Index Performance',
-                        xaxis: {
-                            title: 'Date'
-                        },
-                        yaxis: {
-                            title: 'Index Value'
-                        }
-                    };
-
-                    Plotly.newPlot('chart_div', data, layout);
-                });
-            </script>
+            <div id="charts-container">
+                <div class="chart-item">
+                    <h3>Daily Returns</h3>
+                    <p>This chart shows the daily returns of the NIFTY 50 index.</p>
+                    <div id="chart_div"></div>
+                </div>
+                <div class="chart-item">
+                    <h3>Moving Averages</h3>
+                    <p>Here, you can see the 50-day and 200-day moving averages of the NIFTY 50 index.</p>
+                    <div id="ma_chart"></div>
+                </div>
+                <div class="chart-item">
+                    <h3>On-Balance Volume (OBV)</h3>
+                    <p>The OBV chart reflects the cumulative trading volume and can help in predicting price movements.</p>
+                    <div id="obv_chart"></div>
+                </div>
+                <div class="chart-item">
+                    <h3>Market Condition</h3>
+                    <p>This section indicates whether the market condition is currently bullish or bearish.</p>
+                    <div id="market_condition"></div>
+                </div>
+                <div class="chart-item">
+                    <h3>Risk Meter</h3>
+                    <p>The standard deviation indicates the volatility or risk associated with the NIFTY 50 index.</p>
+                    <div id="std_gauge"></div>
+                </div>
+            </div>
+        </section>
+        <section id="user-auth">
+            <h2>Get More Detailed Analysis</h2>
+            <p>To get more detailed analysis, <a href="/signup/">sign up</a>. If you already have an account, <a href="/login/">login</a>.</p>
         </section>
     </main>
+    <footer>
+        <p>&copy; 2024 NIFTY 50 Analysis. All rights reserved.</p>
+    </footer>
+    <script>
+        $(document).ready(function(){
+            var dates = JSON.parse('{{ dates|escapejs }}');
+            var daily_returns = JSON.parse('{{ daily_returns|escapejs }}');
+            var cumulative_returns = JSON.parse('{{ cumulative_returns|escapejs }}');
+            var latest_std_dev = JSON.parse('{{ latest_std_dev|safe }}');
+            var sma_50 = JSON.parse('{{ sma_50|escapejs }}');
+            var sma_200 = JSON.parse('{{ sma_200|escapejs }}');
+            var adj_close = JSON.parse('{{ adj_close|escapejs }}');
+            var obv = JSON.parse('{{ obv|escapejs }}');
+            var market_condition = '{{ market_condition }}';
+            var nifty_data = JSON.parse('{{ nifty_data|escapejs }}');
+            var staticUrl = '{% static "" %}';  // Get the base static URL
+
+            // Daily Returns plot
+            var trace1 = {
+                x: dates,
+                y: daily_returns,
+                mode: 'lines+markers',
+                name: 'Daily Returns',
+                type: 'scatter',
+                hovertemplate: '<b>Date</b>: %{x}<br><b>Daily Return</b>: %{y:.2f}<extra></extra>'
+            };
+
+            var data1 = [trace1];
+
+            var layout1 = {
+                title: 'NIFTY 50 Daily Returns',
+                xaxis: {
+                    title: 'Date'
+                },
+                yaxis: {
+                    title: 'Daily Returns',
+                    range: [Math.min(...daily_returns) - 0.1, Math.max(...daily_returns) + 0.1]
+                },
+                width: 800  // Adjust the width of the chart
+            };
+
+            Plotly.newPlot('chart_div', data1, layout1);
+
+            // Speedometer chart for standard deviation
+            var data2 = [
+                {
+                    type: "indicator",
+                    mode: "gauge+number",
+                    value: latest_std_dev,
+                    title: { text: "Risk Meter", font: { size: 24 } },
+                    gauge: {
+                        axis: { range: [null, 1], tickwidth: 1, tickcolor: "darkblue" },
+                        bar: { color: "darkblue" },
+                        bgcolor: "white",
+                        borderwidth: 1,
+                        bordercolor: "gray",
+                        steps: [
+                            { range: [0, 0.2], color: "green" },
+                            { range: [0.2, 0.4], color: "yellow" },
+                            { range: [0.4, 0.6], color: "orange" },
+                            { range: [0.6, 0.8], color: "red" },
+                            { range: [0.8, 1], color: "darkred" }
+                        ],
+                        threshold: {
+                            line: { color: "red", width: 4 },
+                            thickness: 0.75,
+                            value: latest_std_dev
+                        }
+                    }
+                }
+            ];
+
+            var layout2 = {
+                width: 800,  // Adjust the width of the chart
+                height: 400,
+                margin: { t: 50, r: 25, l: 25, b: 50 },
+                paper_bgcolor: "white",
+                font: { color: "darkblue", family: "Arial" }
+            };
+
+            Plotly.newPlot('std_gauge', data2, layout2);
+
+            // Moving Averages (SMA 50 and SMA 200) plot
+            var trace2 = {
+                x: dates,
+                y: adj_close,
+                mode: 'lines',
+                name: 'Adjusted Close',
+                hovertemplate: '<b>Date</b>: %{x}<br><b>Adjusted Close</b>: %{y:.2f}<extra></extra>'
+            };
+
+            var trace3 = {
+                x: dates,
+                y: sma_50,
+                mode: 'lines',
+                name: 'SMA 50',
+                hovertemplate: '<b>Date</b>: %{x}<br><b>SMA 50</b>: %{y:.2f}<extra></extra>'
+            };
+
+            var trace4 = {
+                x: dates,
+                y: sma_200,
+                mode: 'lines',
+                name: 'SMA 200',
+                hovertemplate: '<b>Date</b>: %{x}<br><b>SMA 200</b>: %{y:.2f}<extra></extra>'
+            };
+
+            var data3 = [trace2, trace3, trace4];
+
+            var layout3 = {
+                title: 'NIFTY 50 Moving Averages',
+                xaxis: {
+                    title: 'Date'
+                },
+                yaxis: {
+                    title: 'Price'
+                },
+                width: 800  // Adjust the width of the chart
+            };
+
+            Plotly.newPlot('ma_chart', data3, layout3);
+
+            // On-Balance Volume (OBV) plot
+            var trace5 = {
+                x: dates,
+                y: obv,
+                mode: 'lines',
+                name: 'OBV',
+                hovertemplate: '<b>Date</b>: %{x}<br><b>OBV</b>: %{y:.2f}<extra></extra>'
+            };
+
+            var data4 = [trace5];
+
+            var layout4 = {
+                title: 'NIFTY 50 On-Balance Volume (OBV)',
+                xaxis: {
+                    title: 'Date'
+                },
+                yaxis: {
+                    title: 'OBV'
+                },
+                width: 800  // Adjust the width of the chart
+            };
+
+            Plotly.newPlot('obv_chart', data4, layout4);
+
+            // Market Condition
+            var market_condition_div = document.getElementById('market_condition');
+            var marketConditionImage = market_condition === 'Bullish' ? 'Bullish.jpg' : 'Bearish.jpg';
+            market_condition_div.innerHTML = '<img src="' + staticUrl + marketConditionImage + '" alt="' + market_condition + '" width="400" height="300">';
+
+            // Update the risk meter and market condition based on selected date
+            function updateCharts(selectedDate) {
+                var selectedData = nifty_data.find(entry => entry.date === selectedDate);
+                if (selectedData) {
+                    var update = {
+                        'value': selectedData.standard_deviation,
+                        'gauge.threshold.value': selectedData.standard_deviation
+                    };
+                    Plotly.update('std_gauge', update);
+
+                    // Determine which image to display based on market condition
+                    var marketConditionImage = selectedData.market_condition === 'Bullish' ? 'Bullish.jpg' : 'Bearish.jpg';
+                    market_condition_div.innerHTML = '<img src="' + staticUrl + marketConditionImage + '" alt="' + selectedData.market_condition + '" width="400" height="300">';
+                }
+            }
+
+            var chartDivs = ['chart_div', 'ma_chart', 'obv_chart'];
+            chartDivs.forEach(function(chartId) {
+                var chart = document.getElementById(chartId);
+                chart.on('plotly_click', function(data) {
+                    var selectedDate = data.points[0].x;
+                    updateCharts(selectedDate);
+                });
+            });
+        });
+    </script>
 </body>
 </html>
