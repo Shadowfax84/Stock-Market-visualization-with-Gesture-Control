@@ -1,7 +1,7 @@
 Project Setup 
 final_proj/
     manage.py
-    django_debug.log
+    django.log
     final_proj/
         __init__.py
         asgi.py
@@ -16,10 +16,19 @@ final_proj/
         tests.py
         views.py
         static/
-            styles.css
+            Bearish.jpg
+            Bullish.jpg
+            landing.css
+            nifty50_logo.svg
+            NSE_logo.png
         templates/
             landing_page.html
         migrations/
+            __init_.py
+            0001_initial.py
+            0002_sector_stock_stockdata.py
+            0003_alter_stock_ticker.py
         management/
             commands/
-                fetch_nifty_data.py 
+                fetch_nifty_index.py
+                fetch_nifty_stocks.py 

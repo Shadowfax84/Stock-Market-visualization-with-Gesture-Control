@@ -1,8 +1,9 @@
-import logging
 from django.core.management.base import BaseCommand
 import yfinance as yf
 import pandas as pd
 from ui.models import NiftyData
+from datetime import datetime
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ class Command(BaseCommand):
             logger.info('Fetching NIFTY 50 Index data...')
             ticker = "^NSEI"
             start_date = "2018-01-01"
-            end_date = "2024-07-09"
+            end_date = datetime.today()
             data = yf.download(ticker, start=start_date, end=end_date)
 
             logger.info('Calculating financial metrics...')
@@ -100,24 +101,48 @@ class Command(BaseCommand):
                 data.at[data.index[i], 'Market_Condition'] = market_cond
 
             logger.info('Saving data to database...')
+            saved_count = 0
+            updated_count = 0
+            skipped_entries = []
+
             for index, row in data.iterrows():
-                stock_data = NiftyData(
-                    date=index,
-                    adj_close=row['Adj Close'],
-                    daily_return=row['Daily_Return'],
-                    cumulative_return=row['Cumulative_Return'],
-                    sma_50=row['SMA_50'],
-                    sma_200=row['SMA_200'],
-                    rsi=row['RSI'],
-                    upper_bb=row['Upper_BB'],
-                    lower_bb=row['Lower_BB'],
-                    obv=row['OBV'],
-                    force_index=row['Force_Index'],
-                    standard_deviation=row['Standard_Deviation'],
-                    final_decision=row['Final_Decision'],
-                    market_condition=row['Market_Condition']
-                )
-                stock_data.save()
+                try:
+                    stock_data, created = NiftyData.objects.update_or_create(
+                        date=index,
+                        defaults={
+                            'adj_close': row['Adj Close'],
+                            'daily_return': row['Daily_Return'],
+                            'cumulative_return': row['Cumulative_Return'],
+                            'sma_50': row['SMA_50'],
+                            'sma_200': row['SMA_200'],
+                            'rsi': row['RSI'],
+                            'upper_bb': row['Upper_BB'],
+                            'lower_bb': row['Lower_BB'],
+                            'obv': row['OBV'],
+                            'force_index': row['Force_Index'],
+                            'standard_deviation': row['Standard_Deviation'],
+                            'final_decision': row['Final_Decision'],
+                            'market_condition': row['Market_Condition']
+                        }
+                    )
+                    if created:
+                        saved_count += 1
+                    else:
+                        updated_count += 1
+                except Exception as e:
+                    skipped_entries.append((index, str(e)))
+                    logger.error(f'Error saving data for {index}: {str(e)}')
+
+            if saved_count > 0:
+                logger.info(f'{saved_count} entries saved successfully.')
+            if updated_count > 0:
+                logger.info(f'{updated_count} entries updated successfully.')
+            if skipped_entries:
+                logger.warning(
+                    f'{len(skipped_entries)} entries were not saved due to errors:')
+                for entry in skipped_entries:
+                    logger.warning(
+                        f'Entry for {entry[0]} skipped. Error: {entry[1]}')
 
             logger.info('Successfully fetched and saved NIFTY 50 data.')
             print('NIFTY 50 data fetched and saved successfully.')

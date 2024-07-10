@@ -1,18 +1,26 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import NiftyData
 from django.core.serializers.json import DjangoJSONEncoder
-import json
+from django.db.models.functions import ExtractWeekDay
 from datetime import datetime, timedelta
+import json
+from django.contrib.auth import login, logout, authenticate
+from .forms import SignupForm
+from django.contrib.auth.forms import AuthenticationForm
 
 
 def landing_page(request):
-    # Get today's date and the date from one week ago
+    # Get today's date and the date from weeks ago
     today = datetime.today()
-    one_week_ago = today - timedelta(days=7)
+    week_ago = today - timedelta(days=7)
 
-    # Fetch data from the NiftyData model for the past one week
-    nifty_data = NiftyData.objects.filter(
-        date__gte=one_week_ago).order_by('date')
+    # Fetch data from the NiftyData model for the past weeks excluding weekends
+    nifty_data = NiftyData.objects.annotate(
+        week_day=ExtractWeekDay('date')
+    ).filter(
+        date__gte=week_ago,
+        week_day__in=[2, 3, 4, 5, 6]  # 2=Monday, 3=Tuesday, ..., 6=Friday
+    ).order_by('date')
 
     # Prepare data for the chart
     dates = [entry.date.strftime('%Y-%m-%d') for entry in nifty_data]
@@ -49,3 +57,43 @@ def landing_page(request):
         'nifty_data': json.dumps(list(nifty_data.values()), cls=DjangoJSONEncoder)
     }
     return render(request, 'landing_page.html', context)
+
+
+def home(request):
+    return render(request, 'home.html')
+
+
+def signup_view(request):
+    if request.method == 'POST':
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            user.userprofile.sectors.set(form.cleaned_data['sectors'])
+            user.userprofile.stocks.set(form.cleaned_data['stocks'])
+            login(request, user)
+            return redirect('home')
+    else:
+        form = SignupForm()
+
+    return render(request, 'signup.html', {'form': form})
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('landing_page')
+
+
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('home')
+    else:
+        form = AuthenticationForm()
+
+    return render(request, 'login.html', {'form': form})
