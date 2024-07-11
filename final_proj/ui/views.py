@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import NiftyData
+from .models import NiftyData, StockData
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models.functions import ExtractWeekDay
 from datetime import datetime, timedelta
@@ -7,6 +7,8 @@ import json
 from django.contrib.auth import login, logout, authenticate
 from .forms import SignupForm
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 
 
 def landing_page(request):
@@ -71,7 +73,7 @@ def signup_view(request):
             user.userprofile.sectors.set(form.cleaned_data['sectors'])
             user.userprofile.stocks.set(form.cleaned_data['stocks'])
             login(request, user)
-            return redirect('home')
+            return redirect('login')
     else:
         form = SignupForm()
 
@@ -92,8 +94,118 @@ def login_view(request):
             user = authenticate(request, username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect('home')
+                return redirect('dashboard')
     else:
         form = AuthenticationForm()
 
     return render(request, 'login.html', {'form': form})
+
+
+@login_required
+def dashboard_view(request):
+    user_profile = request.user.userprofile
+    sectors = user_profile.sectors.all()
+    return render(request, 'dashboard.html', {'sectors': sectors})
+
+
+@login_required
+def get_stocks(request):
+    sector_id = request.GET.get('sector_id')
+    user_profile = request.user.userprofile
+    if sector_id == 'all':
+        stocks = user_profile.stocks.all()
+    else:
+        stocks = user_profile.stocks.filter(sector__id=sector_id)
+    stock_list = [{'id': stock.id, 'name': stock.name} for stock in stocks]
+    return JsonResponse({'stocks': stock_list})
+
+
+@login_required
+def get_visualizations(request):
+    today = datetime.now().date()
+    one_month_ago = today - timedelta(days=30)
+
+    stock_id = request.GET.get('stock_id')
+    if stock_id == 'all':
+        stock_data = StockData.objects.filter(
+            stock__userprofile=request.user.userprofile,
+            date__gte=one_month_ago
+        )
+        stock_name = "All Stocks"
+    else:
+        stock_data = StockData.objects.filter(
+            stock__id=stock_id,
+            date__gte=one_month_ago
+        )
+
+    dates = [data.date for data in stock_data]
+    open_prices = [data.open for data in stock_data]
+    high_prices = [data.high for data in stock_data]
+    low_prices = [data.low for data in stock_data]
+    close_prices = [data.close for data in stock_data]
+    daily_returns = [data.daily_return for data in stock_data]
+    cumulative_returns = [data.cumulative_return for data in stock_data]
+    obv = [data.obv for data in stock_data]
+    force_index = [data.force_index for data in stock_data]
+
+    # Key metrics for summary cards
+    if stock_data.exists():
+        latest_close = close_prices[-1]
+        previous_close = close_prices[-2] if len(
+            close_prices) > 1 else latest_close
+        price_change = latest_close - previous_close
+        price_change_percent = (
+            price_change / previous_close) * 100 if previous_close else 0
+        latest_obv = obv[-1]
+        latest_force_index = force_index[-1]
+        volatility = stock_data.latest('date').standard_deviation
+    else:
+        latest_close = previous_close = price_change = price_change_percent = 0
+        latest_obv = latest_force_index = volatility = 0
+
+    # Prepare data for Candlestick chart
+    candlestick_data = {
+        'x': dates,
+        'open': open_prices,
+        'high': high_prices,
+        'low': low_prices,
+        'close': close_prices
+    }
+
+    # Prepare data for Returns chart
+    returns_data = {
+        'dates': dates,
+        'daily_returns': daily_returns,
+        'cumulative_returns': cumulative_returns
+    }
+
+    # Prepare data for OBV and Force Index chart
+    obv_data = {
+        'dates': dates,
+        'obv': obv,
+        'force_index': force_index
+    }
+
+    return JsonResponse({
+        'candlestick': candlestick_data,
+        'returns': returns_data,
+        'obv': obv_data,
+        'summary': {
+            'latest_close': latest_close,
+            'price_change': price_change,
+            'price_change_percent': price_change_percent,
+            'latest_obv': latest_obv,
+            'latest_force_index': latest_force_index,
+            'volatility': volatility
+        }
+    })
+
+
+@login_required
+def portfolio_analysis(request):
+    return render(request, 'portfolio_analysis.html')
+
+
+@login_required
+def general_analysis(request):
+    return render(request, 'general_analysis.html')

@@ -70,10 +70,16 @@ def analyze_stock(ticker, start_date, end_date):
         return None
 
     # Calculate daily returns
-    data['Daily_Return'] = data['Adj Close'].pct_change()
+    data['Daily_Return'] = data['Adj Close'].pct_change() * 100
 
     # Calculate cumulative returns
-    data['Cumulative_Return'] = (1 + data['Daily_Return']).cumprod()
+    data['Cumulative_Return'] = (1 + data['Daily_Return']/100).cumprod()
+
+    # Calculate open, high, low, and close
+    data['Open'] = data['Open']
+    data['High'] = data['High']
+    data['Low'] = data['Low']
+    data['Close'] = data['Adj Close']
 
     # Calculate Simple Moving Averages (SMA)
     data['SMA_50'] = data['Close'].rolling(window=50).mean()

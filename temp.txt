@@ -32,3 +32,15 @@ final_proj/
             commands/
                 fetch_nifty_index.py
                 fetch_nifty_stocks.py 
+
+Visualizations:
+
+Line Charts: Display historical performance data for selected stocks and sectors.
+Bar Charts: Show daily/weekly/monthly performance changes.
+Candlestick Charts: Provide detailed views of stock price movements.
+Pie Charts: Illustrate portfolio diversification.
+
+Performance Metrics:
+
+Key Metrics: Include data like price changes, volume, moving averages, RSI, and Bollinger Bands.
+Significant Trends: Highlight major trends or changes in stock performance.

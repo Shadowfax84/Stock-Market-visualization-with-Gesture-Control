@@ -49,6 +49,10 @@ def save_user_profile(sender, instance, **kwargs):
 
 class NiftyData(models.Model):
     date = models.DateField()
+    open = models.FloatField()
+    high = models.FloatField()
+    low = models.FloatField()
+    close = models.FloatField()
     adj_close = models.FloatField()
     daily_return = models.FloatField()
     cumulative_return = models.FloatField()
@@ -70,6 +74,10 @@ class NiftyData(models.Model):
 class StockData(models.Model):
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
     date = models.DateField()
+    open = models.FloatField()
+    high = models.FloatField()
+    low = models.FloatField()
+    close = models.FloatField()
     daily_return = models.FloatField()
     cumulative_return = models.FloatField()
     sma_50 = models.FloatField()

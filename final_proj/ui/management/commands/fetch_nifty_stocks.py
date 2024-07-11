@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
 import yfinance as yf
-import pandas as pd
 from ui.models import Sector, Stock, StockData
 from datetime import datetime
 import logging
@@ -99,8 +98,12 @@ class Command(BaseCommand):
             print(f'Error fetching NIFTY 50 stock data: {e}')
 
     def calculate_metrics(self, data):
-        data['Daily_Return'] = data['Adj Close'].pct_change()
-        data['Cumulative_Return'] = (1 + data['Daily_Return']).cumprod()
+        data['Daily_Return'] = data['Adj Close'].pct_change() * 100
+        data['Cumulative_Return'] = (1 + data['Daily_Return']/100).cumprod()
+        data['Open'] = data['Open']
+        data['High'] = data['High']
+        data['Low'] = data['Low']
+        data['Close'] = data['Adj Close']
         data['SMA_50'] = data['Close'].rolling(window=50).mean()
         data['SMA_200'] = data['Close'].rolling(window=200).mean()
         data['Delta'] = data['Close'].diff()
@@ -176,6 +179,10 @@ class Command(BaseCommand):
                     stock=stock,
                     date=index,
                     defaults={
+                        'open': row['Open'],
+                        'high': row['High'],
+                        'low': row['Low'],
+                        'close': row['Close'],
                         'daily_return': row['Daily_Return'],
                         'cumulative_return': row['Cumulative_Return'],
                         'sma_50': row['SMA_50'],
