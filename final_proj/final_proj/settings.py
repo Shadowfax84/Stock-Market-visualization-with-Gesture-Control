@@ -82,7 +82,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'ska_db',
         'USER': 'postgres',
-        'PASSWORD': '1475963',
+        'PASSWORD': 'Chunchala',
         'HOST': 'localhost',
         'PORT': '5432',
     }
