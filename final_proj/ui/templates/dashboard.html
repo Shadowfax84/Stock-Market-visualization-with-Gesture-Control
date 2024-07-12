@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Dashboard</title>
+        {% load static %}
+        <link rel="stylesheet" href="{% static 'dashboard_light.css' %}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                $('.nav-toggle-btn').click(function() {
+                    $('.header-nav').toggleClass('show');
+                });
+            });
+        </script>
+    </head>
+<body>
+    <header>
+        <h1>Welcome, {{ user.username }}</h1>
+        <button class="nav-toggle-btn">Menu</button>
+        <nav class="header-nav">
+            <a href="{% url 'portfolio_analysis' %}" class="nav-link">Portfolio Analysis</a>
+            <a href="{% url 'general_analysis' %}" class="nav-link">General Analysis</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'logout' %}" class="nav-link logout-link">Logout</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main>
+        <section id="sectors">
+            <h2>Your Selected Sectors</h2>
+            {% for sector in sectors %}
+                <button class="sector-button" data-sector-id="{{ sector.id }}">{{ sector.name }}</button>
+            {% endfor %}
+        </section>
+        <section id="stocks">
+            <h2>Your Selected Stocks</h2>
+            <button class="stock-button" data-stock-id="all">All</button>
+            <div id="stock-list"></div>
+        </section>
+        <section id="performance-summary"></section>
+            <h2>Stock Performance Summary</h2>
+            <div id="summary-container">
+                <div class="card" id="card-price-change">
+                    <h3>Price Change</h3>
+                    <p id="price-change">-</p>
+                    <p id="price-change-percent">-</p>
+                    <p class="description">The difference between the current price and the previous closing price, shown as both the absolute value and the percentage change.</p>
+                </div>
+                <div class="card" id="card-latest-close">
+                    <h3>Latest Close</h3>
+                    <p id="latest-close">-</p>
+                    <p class="description_c">The final price at which the stock traded at the end of the trading day.</p>
+                </div>
+                <div class="card" id="card-latest-obv">
+                    <h3>Latest OBV</h3>
+                    <p id="latest-obv">-</p>
+                    <p class="description_c">The current value of the On-Balance Volume (OBV) indicator, which measures the cumulative flow of money into and out of the stock.</p>
+                </div>
+                <div class="card" id="card-latest-force-index">
+                    <h3>Latest Force Index</h3>
+                    <p id="latest-force-index">-</p>
+                    <p class="description_c">The current value of the Force Index, which combines price and volume to determine the strength of the stock's trend.</p>
+                </div>
+                <div class="card" id="card-volatility">
+                    <h3>Volatility</h3>
+                    <p id="volatility">-</p>
+                    <p class="description">The annualized standard deviation of the stock's daily returns, expressed as a percentage. This measures the degree of variation in the stock's price over time.</p>
+                </div>
+            </div>
+        </section>
+        <section id="visualizations">
+            <h2>Stock Visualizations</h2>
+            <div id="candlestick-chart" class="chart-large">
+            </div>
+            <div id="chart-row">
+                <div id="returns-chart" class="chart-small">
+                </div>
+                <div id="obv-chart" class="chart-small">
+                </div>
+            </div>
+        </section>
+    </main>
+    <script>
+        $(document).ready(function() {
+            function formatNumber(value) {
+                if (value >= 1e9) return (value / 1e9).toFixed(2) + 'B';
+                if (value >= 1e6) return (value / 1e6).toFixed(2) + 'M';
+                if (value >= 1e3) return (value / 1e3).toFixed(2) + 'K';
+                return value.toFixed(2);
+            }
+
+            function plotCharts(data) {
+                // Candlestick chart
+                Plotly.newPlot('candlestick-chart', [{
+                    x: data.candlestick.x,
+                    open: data.candlestick.open,
+                    high: data.candlestick.high,
+                    low: data.candlestick.low,
+                    close: data.candlestick.close,
+                    type: 'candlestick'
+                }],{
+                    title: 'Stock Candlestick Chart',
+                    xaxis: {
+                        title: 'Date'
+                    },
+                    yaxis: {
+                        title: 'Price'
+                    }}
+                );
+
+                // Returns chart
+                Plotly.newPlot('returns-chart', [
+                    {
+                        x: data.returns.dates,
+                        y: data.returns.daily_returns,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: 'Daily Returns'
+                    },
+                    {
+                        x: data.returns.dates,
+                        y: data.returns.cumulative_returns,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: 'Cumulative Returns'
+                    }
+                ],{
+                    title: 'Returns Chart',
+                    xaxis: {
+                        title: 'Date'
+                    },
+                    yaxis: {
+                        title: 'Change in Price'
+                    }}
+                );
+
+                // OBV and Force Index chart
+                Plotly.newPlot('obv-chart', [
+                    {
+                        x: data.obv.dates,
+                        y: data.obv.obv,
+                        type: 'bar',
+                        name: 'OBV'
+                    },
+                    {
+                        x: data.obv.dates,
+                        y: data.obv.force_index,
+                        type: 'bar',
+                        name: 'Force Index'
+                    }
+                ],{
+                    title: "Strength of Stock's Price Trends Chart",
+                    xaxis: {
+                        title: 'Date'
+                    },
+                    yaxis: {
+                        title: 'Shares traded'
+                    }}
+                );
+
+                // Update summary cards
+                const latestClose = formatNumber(data.summary.latest_close);
+                const priceChange = formatNumber(data.summary.price_change);
+                const latestObv = formatNumber(data.summary.latest_obv);
+                const latestForceIndex = formatNumber(data.summary.latest_force_index);
+                const volatility = formatNumber(data.summary.volatility);
+
+                $('#latest-close').text(latestClose);
+                $('#price-change').text(priceChange);
+                $('#price-change-percent').text(`(${data.summary.price_change_percent.toFixed(2)}%)`);
+
+                $('#latest-obv').text(latestObv);
+                $('#latest-force-index').text(latestForceIndex);
+                $('#volatility').text(volatility);
+
+                // Reset card classes
+                $('.card').removeClass('highlight positive negative positive-volatility negative-volatility');
+
+                // Change card colors if values exceed thresholds
+                if (data.summary.latest_close > 1000) $('#card-latest-close').addClass('highlight');
+                if (data.summary.latest_obv > 1000) $('#card-latest-obv').addClass('highlight');
+                if (data.summary.latest_force_index > 1000) $('#card-latest-force-index').addClass('highlight');
+
+                // Change card colors for price change
+                if (data.summary.price_change >= 0) {
+                    $('#card-price-change').addClass('positive');
+                } else {
+                    $('#card-price-change').addClass('negative');
+                }
+
+                // Change card colors for volatility
+                if (data.summary.volatility > 75) {
+                    $('#card-volatility').addClass('negative-volatility');
+                } else {
+                    $('#card-volatility').addClass('positive-volatility');
+                }
+            }
+
+            function addStockButtonHandlers() {
+                $('.stock-button').click(function() {
+                    var stockId = $(this).data('stock-id');
+                    $.ajax({
+                        url: '{% url "get_visualizations" %}',
+                        data: { 'stock_id': stockId },
+                        success: function(data) {
+                            plotCharts(data);
+                        }
+                    });
+                });
+            }
+
+            $('.sector-button').click(function() {
+                var sectorId = $(this).data('sector-id');
+                $.ajax({
+                    url: '{% url "get_stocks" %}',
+                    data: { 'sector_id': sectorId },
+                    success: function(data) {
+                        $('#stock-list').html('');
+                        data.stocks.forEach(function(stock) {
+                            $('#stock-list').append('<button class="stock-button" data-stock-id="' + stock.id + '">' + stock.name + '</button>');
+                        });
+                        addStockButtonHandlers();
+                    }
+                });
+            });
+
+            $('.stock-button[data-stock-id="all"]').click(function() {
+                $.ajax({
+                    url: '{% url "get_stocks" %}',
+                    data: { 'sector_id': 'all' },
+                    success: function(data) {
+                        $('#stock-list').html('');
+                        data.stocks.forEach(function(stock) {
+                            $('#stock-list').append('<button class="stock-button" data-stock-id="' + stock.id + '">' + stock.name + '</button>');
+                        });
+                        addStockButtonHandlers();
+                    }
+                });
+            });
+
+            addStockButtonHandlers();
+        });
+    </script>
+</body>
+</html>

@@ -16,12 +16,17 @@ class Command(BaseCommand):
             logger.info('Fetching NIFTY 50 Index data...')
             ticker = "^NSEI"
             start_date = "2018-01-01"
-            end_date = datetime.today()
+            end_date = datetime.today().strftime('%Y-%m-%d')
             data = yf.download(ticker, start=start_date, end=end_date)
 
             logger.info('Calculating financial metrics...')
-            data['Daily_Return'] = data['Adj Close'].pct_change()
-            data['Cumulative_Return'] = (1 + data['Daily_Return']).cumprod()
+            data['Daily_Return'] = data['Adj Close'].pct_change() * 100
+            data['Cumulative_Return'] = (
+                1 + data['Daily_Return']/100).cumprod()
+            data['Open'] = data['Open']
+            data['High'] = data['High']
+            data['Low'] = data['Low']
+            data['Close'] = data['Adj Close']
             data['SMA_50'] = data['Close'].rolling(window=50).mean()
             data['SMA_200'] = data['Close'].rolling(window=200).mean()
             data['Delta'] = data['Close'].diff()
@@ -110,6 +115,10 @@ class Command(BaseCommand):
                     stock_data, created = NiftyData.objects.update_or_create(
                         date=index,
                         defaults={
+                            'open': row['Open'],
+                            'high': row['High'],
+                            'low': row['Low'],
+                            'close': row['Close'],
                             'adj_close': row['Adj Close'],
                             'daily_return': row['Daily_Return'],
                             'cumulative_return': row['Cumulative_Return'],

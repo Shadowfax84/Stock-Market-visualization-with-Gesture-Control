@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% load static %}
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>General Analysis Dashboard</title>
+        <link rel="stylesheet" href="{% static 'dashboard_light.css' %}" />
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    </head>
+    <body>
+        <h1>General Analysis Dashboard</h1>
+
+        <div id="welcome-message">
+            <h2>Welcome, {{ request.user.username }}</h2>
+        </div>
+
+        <div id="sector-buttons">
+            <h3>Select Sector:</h3>
+            <div id="sectors"></div>
+        </div>
+
+        <div id="stock-buttons">
+            <h3>Select Stock:</h3>
+            <div id="stocks"></div>
+        </div>
+
+        <div id="summary-cards">
+            <h2>Summary:</h2>
+            <div class="card">Latest Close: {{ data.summary.latest_close }}</div>
+            <div class="card">Price Change: {{ data.summary.price_change }}</div>
+            <div class="card">Price Change (%): {{ data.summary.price_change_percent|floatformat:2 }}%</div>
+            <div class="card">Latest OBV: {{ data.summary.latest_obv }}</div>
+            <div class="card">Latest RSI: {{ data.summary.latest_rsi }}</div>
+            <div class="card">Volatility: {{ data.summary.volatility|floatformat:2 }}</div>
+        </div>
+
+        <div id="visualizations">
+            <h2>Stock Visualizations:</h2>
+            <div class="chart-container">
+                <div id="candlestick-chart" class="chart"></div>
+                <div id="returns-chart" class="chart"></div>
+                <div id="obv-chart" class="chart"></div>
+            </div>
+        </div>
+
+        <script>
+            $(document).ready(function () {
+                // Fetch sectors
+                $.ajax({
+                    url: "{% url 'get_sectors' %}",
+                    method: "GET",
+                    success: function (data) {
+                        let sectorButtons = "";
+                        data.forEach((sector) => {
+                            sectorButtons += `<button class="sector-btn" data-id="${sector.id}">${sector.name}</button>`;
+                        });
+                        sectorButtons += '<button class="sector-btn" data-id="all">All</button>';
+                        $("#sectors").html(sectorButtons);
+                    },
+                });
+
+                // Fetch stocks when a sector is selected
+                $(document).on("click", ".sector-btn", function () {
+                    const sectorId = $(this).data("id");
+                    $.ajax({
+                        url: "{% url 'get_stocks_by_sector' %}",
+                        method: "GET",
+                        data: { sector_id: sectorId },
+                        success: function (data) {
+                            let stockButtons = '<button class="stock-btn" data-id="all">All</button>';
+                            data.stocks.forEach((stock) => {
+                                stockButtons += `<button class="stock-btn" data-id="${stock.id}">${stock.name}</button>`;
+                            });
+                            $("#stocks").html(stockButtons);
+                            $("#stock-buttons").show();
+                        },
+                    });
+                });
+
+                // Fetch stock data when a stock is selected
+                $(document).on("click", ".stock-btn", function () {
+                    const stockId = $(this).data("id");
+                    let url = "{% url 'get_genvisuals' %}";
+
+                    if (stockId === "all") {
+                        const sectorId = $(this).siblings(".sector-btn.active").data("id");
+                        url = "{% url 'get_genvisuals' %}?sector=" + sectorId;
+                    } else {
+                        url = "{% url 'get_genvisuals' %}?stock=" + stockId;
+                    }
+
+                    $.ajax({
+                        url: url,
+                        method: "GET",
+                        success: function (data) {
+                            // Summary cards
+                            $("#summary-cards").html(`
+                                <div class="card">Latest Close: ${data.summary.latest_close}</div>
+                                <div class="card">Price Change: ${data.summary.price_change}</div>
+                                <div class="card">Price Change (%): ${data.summary.price_change_percent.toFixed(2)}%</div>
+                                <div class="card">Latest OBV: ${data.summary.latest_obv}</div>
+                                <div class="card">Latest RSI: ${data.summary.latest_rsi}</div>
+                                <div class="card">Volatility: ${data.summary.volatility.toFixed(2)}</div>
+                            `);
+
+                            // Candlestick chart
+                            const candlestickTrace = {
+                                x: data.candlestick.x,
+                                open: data.candlestick.open,
+                                high: data.candlestick.high,
+                                low: data.candlestick.low,
+                                close: data.candlestick.close,
+                                type: "candlestick",
+                                xaxis: "x",
+                                yaxis: "y",
+                            };
+
+                            const candlestickLayout = {
+                                title: "Candlestick Chart",
+                                xaxis: { title: "Date" },
+                                yaxis: { title: "Price" },
+                            };
+
+                            Plotly.newPlot("candlestick-chart", [candlestickTrace], candlestickLayout);
+
+                            // Price chart with moving averages
+                            const priceTrace = {
+                                x: data.price_chart.dates,
+                                y: data.price_chart.close_prices,
+                                type: "scatter",
+                                mode: "lines",
+                                name: "Close Price",
+                            };
+
+                            const sma50Trace = {
+                                x: data.price_chart.dates,
+                                y: data.price_chart.sma_50,
+                                type: "scatter",
+                                mode: "lines",
+                                name: "50-Day SMA",
+                            };
+
+                            const sma200Trace = {
+                                x: data.price_chart.dates,
+                                y: data.price_chart.sma_200,
+                                type: "scatter",
+                                mode: "lines",
+                                name: "200-Day SMA",
+                            };
+
+                            const priceLayout = {
+                                title: "Price Chart with Moving Averages",
+                                xaxis: { title: "Date" },
+                                yaxis: { title: "Price" },
+                            };
+
+                            Plotly.newPlot("returns-chart", [priceTrace, sma50Trace, sma200Trace], priceLayout);
+
+                            // Returns chart
+                            const dailyReturnsTrace = {
+                                x: data.returns.dates,
+                                y: data.returns.daily_returns,
+                                type: 'scatter',
+                                mode: 'lines',
+                                name: 'Daily Returns'
+                            };
+
+                            const cumulativeReturnsTrace = {
+                                x: data.returns.dates,
+                                y: data.returns.cumulative_returns,
+                                type: 'scatter',
+                                mode: 'lines',
+                                name: 'Cumulative Returns'
+                            };
+
+                            const returnsLayout = {
+                                title: 'Returns Chart',
+                                xaxis: { title: 'Date' },
+                                yaxis: { title: 'Returns' }
+                            };
+
+                            Plotly.newPlot('returns-chart', [dailyReturnsTrace, cumulativeReturnsTrace], returnsLayout);
+
+                            // OBV and Force Index chart
+                            const obvTrace = {
+                                x: data.obv.dates,
+                                y: data.obv.obv,
+                                type: 'scatter',
+                                mode: 'lines',
+                                name: 'OBV'
+                            };
+
+                            const forceIndexTrace = {
+                                x: data.obv.dates,
+                                y: data.obv.force_index,
+                                type: 'scatter',
+                                mode: 'lines',
+                                name: 'Force Index'
+                            };
+
+                            const obvForceIndexLayout = {
+                                title: 'OBV and Force Index',
+                                xaxis: { title: 'Date' },
+                                yaxis: { title: 'Value' }
+                            };
+
+                            Plotly.newPlot('obv-chart', [obvTrace, forceIndexTrace], obvForceIndexLayout);
+
+                            $("#visualizations").show();
+                        },
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

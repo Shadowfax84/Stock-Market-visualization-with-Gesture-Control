@@ -25,4 +25,13 @@ urlpatterns = [
     path('signup/', signup_view, name='signup'),
     path('logout/', logout_view, name='logout'),
     path('login/', login_view, name='login'),
+    path('dashboard/', dashboard_view, name='dashboard'),
+    path('get_stocks/', get_stocks, name='get_stocks'),
+    path('get_visualizations/', get_visualizations, name='get_visualizations'),
+    path('portfolio_analysis/', portfolio_analysis, name='portfolio_analysis'),
+    path('general_analysis/', general_analysis, name='general_analysis'),
+    path('get_sectors/', get_sectors, name='get_sectors'),
+    path('get_stocks_by_sector/', get_stocks_by_sector,
+         name='get_stocks_by_sector'),
+    path('get_genvisuals/', get_genvisuals, name='get_genvisuals'),
 ]

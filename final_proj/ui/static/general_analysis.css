@@ -1,0 +1,74 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #212529;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#welcome-message {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#sector-buttons,
+#stock-buttons {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#sector-buttons button,
+#stock-buttons button {
+    margin: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#sector-buttons button:hover,
+#stock-buttons button:hover {
+    background-color: #0056b3;
+}
+
+#summary-cards {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+#summary-cards .card {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 20px;
+    margin: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    flex: 1 1 30%;
+    text-align: center;
+}
+
+#visualizations {
+    margin-top: 20px;
+}
+
+.chart-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+}
+
+.chart {
+    flex: 1 1 45%;
+    margin: 20px;
+}

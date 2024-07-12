@@ -1,0 +1,185 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f8ff;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px;
+    text-align: left;
+    position: relative;
+}
+
+header h1 {
+    margin: 0;
+}
+
+.nav-toggle-btn {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #4CAF50;
+    text-decoration: none;
+    padding: 8px 16px;
+    border: 2px solid #006400;
+    border-radius: 4px;
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.header-nav {
+    display: none;
+    position: absolute;
+    top: 50px;
+    right: 10px;
+    background-color: #4CAF50;
+    padding: 10px;
+    border-radius: 4px;
+    z-index: 1;
+    min-width: 150px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.header-nav.show {
+    display: block;
+}
+
+.header-nav .nav-link {
+    display: block;
+    color: white;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.header-nav .nav-link:hover {
+    background-color: #45a049;
+}
+
+
+main {
+    padding: 20px;
+}
+
+h2 {
+    margin-top: 20px;
+}
+
+button {
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 5px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+button:active,
+button:focus {
+    background-color: orange;
+}
+
+#chart-container {
+    margin-top: 20px;
+}
+
+.card {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px;
+    text-align: center;
+    box-shadow: 2px 2px 12px #aaa;
+    background-color: white;
+    width: 200px;
+}
+
+.card h3 {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.card p {
+    font-size: 14px;
+    margin: 5px 0;
+}
+
+#summary-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+#summary-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+.positive {
+    color: white;
+    background-color: green;
+}
+
+.negative {
+    color: white;
+    background-color: red;
+}
+
+.highlight {
+    background-color:  lightcyan;
+}
+
+.positive-volatility {
+    color: white;
+    background-color: green;
+}
+
+.negative-volatility {
+    color: white;
+    background-color: red;
+}
+
+.chart-large {
+    width: 100%;
+    height: 400px;
+    margin-bottom: 20px;
+}
+
+.chart-small {
+    width: 48%;
+    height: 300px;
+    margin-bottom: 20px;
+}
+
+#chart-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.description {
+    font-size: 12px;
+    color: black;
+    text-align: center;
+}
+
+p#price-change,p#latest-close,p#latest-obv,
+p#latest-force-index,p#volatility{
+    font-size: 16px;
+}
+
+#price-change-percent {
+    font-weight: bold;
+}

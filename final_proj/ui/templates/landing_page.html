@@ -57,7 +57,7 @@
         </section>
         <section id="user-auth">
             <h2>Get More Detailed Analysis</h2>
-            <p>To get more detailed analysis, <a href="signup/">sign up</a>. If you already have an account, <a href="login/">login</a>.</p>
+            <p>To get more detailed analysis, <a href="{% url 'signup' %}">sign up</a>. If you already have an account, <a href="{% url 'login' %}">login</a>.</p>
         </section>
     </main>
     <footer>
@@ -75,7 +75,7 @@
             var obv = JSON.parse('{{ obv|escapejs }}');
             var market_condition = '{{ market_condition }}';
             var nifty_data = JSON.parse('{{ nifty_data|escapejs }}');
-            var staticUrl = '{% static "" %}';  // Get the base static URL
+            var staticUrl = '{% static "" %}';
 
             // Daily Returns plot
             var trace1 = {
@@ -98,7 +98,7 @@
                     title: 'Daily Returns',
                     range: [Math.min(...daily_returns) - 0.1, Math.max(...daily_returns) + 0.1]
                 },
-                width: 800  // Adjust the width of the chart
+                width: 800
             };
 
             Plotly.newPlot('chart_div', data1, layout1);
@@ -111,17 +111,17 @@
                     value: latest_std_dev,
                     title: { text: "Risk Meter", font: { size: 24 } },
                     gauge: {
-                        axis: { range: [null, 1], tickwidth: 1, tickcolor: "darkblue" },
+                        axis: { range: [null, 100], tickwidth: 1, tickcolor: "darkblue" },
                         bar: { color: "darkblue" },
                         bgcolor: "white",
                         borderwidth: 1,
                         bordercolor: "gray",
                         steps: [
-                            { range: [0, 0.2], color: "green" },
-                            { range: [0.2, 0.4], color: "yellow" },
-                            { range: [0.4, 0.6], color: "orange" },
-                            { range: [0.6, 0.8], color: "red" },
-                            { range: [0.8, 1], color: "darkred" }
+                            { range: [0, 20], color: "green" },
+                            { range: [20, 40], color: "yellow" },
+                            { range: [40, 60], color: "orange" },
+                            { range: [60, 80], color: "red" },
+                            { range: [80, 100], color: "darkred" }
                         ],
                         threshold: {
                             line: { color: "red", width: 4 },
@@ -133,7 +133,7 @@
             ];
 
             var layout2 = {
-                width: 800,  // Adjust the width of the chart
+                width: 800,
                 height: 400,
                 margin: { t: 50, r: 25, l: 25, b: 50 },
                 paper_bgcolor: "white",
@@ -177,7 +177,7 @@
                 yaxis: {
                     title: 'Price'
                 },
-                width: 800  // Adjust the width of the chart
+                width: 800
             };
 
             Plotly.newPlot('ma_chart', data3, layout3);
@@ -201,7 +201,7 @@
                 yaxis: {
                     title: 'OBV'
                 },
-                width: 800  // Adjust the width of the chart
+                width: 800
             };
 
             Plotly.newPlot('obv_chart', data4, layout4);
@@ -221,7 +221,6 @@
                     };
                     Plotly.update('std_gauge', update);
 
-                    // Determine which image to display based on market condition
                     var marketConditionImage = selectedData.market_condition === 'Bullish' ? 'Bullish.jpg' : 'Bearish.jpg';
                     market_condition_div.innerHTML = '<img src="' + staticUrl + marketConditionImage + '" alt="' + selectedData.market_condition + '" width="400" height="300">';
                 }

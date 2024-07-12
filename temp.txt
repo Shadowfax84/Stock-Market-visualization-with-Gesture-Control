@@ -32,3 +32,43 @@ final_proj/
             commands/
                 fetch_nifty_index.py
                 fetch_nifty_stocks.py 
+
+Now that we r done with dashboard 
+Let's make a general analysis chart for all the stocks
+what I wanted to do is show the 13 sectors and 
+as I select a sector I want to see all the stocks in that sector
+the stock should change dynamically as I choose a different sector 
+then I want to plot chart that change dynamically as I choose a different stock
+the charts I want to plot are 
+1.Price Chart with Moving Averages
+Chart 1: Interactive 3D Price Chart
+Render the stock's closing price over time as a 3D line chart, allowing users to rotate and zoom the visualization
+Incorporate the 50-day and 200-day SMAs as additional 3D line plots
+Add interactive elements like tooltips to display detailed price information on hover
+Chart 2: Animated Price Heatmap
+Create a heatmap visualization of the stock's daily price movements
+Use a color gradient to represent the price levels, with hot colors for high prices and cool colors for low prices
+Animate the heatmap over time to show the dynamic price changes
+2. Volatility and Momentum Indicators
+Chart 3: Interactive Bollinger Band Tunnel
+Render the stock's closing price as a line plot
+Create a 3D "tunnel" around the price line using the upper and lower Bollinger Bands
+Allow users to adjust the Bollinger Band parameters and see the tunnel change in real-time
+Chart 4: Radial RSI Visualization
+Display the RSI indicator on a radial chart, with the RSI value represented by the distance from the center
+Use color coding to highlight overbought and oversold regions
+Add interactive elements like tooltips to provide detailed RSI information
+3. Volume and Momentum Indicators
+Chart 5: 3D OBV Waterfall
+Represent the OBV indicator as a 3D waterfall chart, with the height of the "waterfall" corresponding to the OBV value
+Animate the waterfall to show the changes in OBV over time
+Incorporate interactive features like zooming and panning to allow users to explore the data
+Chart 6: Force Index Sparkline Matrix
+Create a grid of small sparkline charts, each representing the Force Index over a specific time period
+Use color coding and size variations to highlight the relative strength and direction of the Force Index
+Allow users to hover over individual sparklines to see detailed Force Index information
+4. Candlestick Chart
+Chart 7: Interactive Candlestick Carousel
+Display the candlestick chart in a carousel-style format, allowing users to swipe or click through the historical data
+Incorporate interactive features like zooming, panning, and tooltips to provide detailed information about each candlestick
+Use dynamic lighting and shadows to create a visually striking and immersive candlestick chart experience
